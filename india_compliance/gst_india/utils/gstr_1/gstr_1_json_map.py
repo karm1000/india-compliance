@@ -3,7 +3,7 @@ from datetime import datetime
 from itertools import chain
 
 import frappe
-from frappe.utils import flt
+from frappe.utils import flt, fmt_money
 
 from india_compliance.gst_india.constants import UOM_MAP
 from india_compliance.gst_india.report.gstr_1.gstr_1 import (
@@ -2375,7 +2375,7 @@ class BooksDataMapper:
         This method is used to round off the rounding difference values.
         """
         for key, value in self.rounding_difference.items():
-            self.rounding_difference[key] = flt(value, self.PRECISION)
+            self.rounding_difference[key] = fmt_money(value)
 
         # saved as object -> it's normalized
         prepared_data["rounding_difference"] = {

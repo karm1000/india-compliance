@@ -304,6 +304,27 @@ def get_journal_entries(month_or_quarter, year, company, filing_preference):
 
 
 @frappe.whitelist()
+def get_round_off_account(company):
+    print(f"Getting Round Off Account for Company: {company}")
+    if not frappe.has_permission("Journal Entry", "create"):
+        return
+
+    accounts = frappe.get_all(
+        "Account",
+        filters={
+            "company": company,
+            "account_type": "Round Off",
+        },
+        pluck="name",
+    )
+
+    print(f"Round Off Accounts: {accounts}", accounts)
+
+    if accounts:
+        return accounts[0]
+
+
+@frappe.whitelist()
 def make_journal_entry(
     company, company_gstin, month_or_quarter, year, accounts, values
 ):

@@ -812,6 +812,20 @@ class GSTR1 {
         this.create_journal_entry_dialog(je_details);
     }
 
+    async show_round_off_jv_dialog() {
+        if (!frappe.perm.has_perm("Journal Entry")) return;
+
+        const { company } = this.frm.doc;
+        const { message: round_off_account } = await frappe.call({
+            method: "india_compliance.gst_india.doctype.gstr_1_beta.gstr_1_beta.get_round_off_account",
+            args: { company },
+        });
+
+        console.log("Round Off Account: ", round_off_account);
+
+        this.create_rounding_journal_entry(round_off_account);
+    }
+
     create_journal_entry_dialog(je_details) {
         const dialog = new frappe.ui.Dialog({
             title: "Suggested Journal Entry",
@@ -866,6 +880,36 @@ class GSTR1 {
         });
 
         dialog.show();
+    }
+
+    create_rounding_journal_entry(account) {
+        let rounding_difference = this.data.books?.rounding_difference[0];
+        if (!rounding_difference) return;
+        console.log("Rounding Difference: ", rounding_difference);
+
+        let debit_in_account_currency = 0;
+        let credit_in_account_currency = 0;
+
+        Object.values(rounding_difference).forEach(v => {
+            if (v > 0) {
+                debit_in_account_currency += v;
+            } else {
+                credit_in_account_currency += Math.abs(v);
+            }
+        });
+
+        const je_details = {
+            posting_date: frappe.datetime.get_today(),
+            data: [
+                {
+                    account,
+                    debit_in_account_currency,
+                    credit_in_account_currency,
+                },
+            ],
+        };
+
+        this.create_journal_entry_dialog(je_details);
     }
 
     generate_tax_table(data) {
@@ -2728,6 +2772,7 @@ class FileGSTR1Dialog {
                     this.frm.doc.__gst_data = r.message;
                     this.frm.trigger("load_gstr1_data");
                     this.frm.gstr1.show_suggested_jv_dialog();
+                    this.frm.gstr1.show_round_off_jv_dialog();
                 });
         }
     }
