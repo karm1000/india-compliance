@@ -105,6 +105,8 @@ const GSTR1_DataField = {
 
 frappe.ui.form.on(DOCTYPE, {
     async setup(frm) {
+        frm.set_value(frappe.route_options);
+
         frappe.require("gstr1.bundle.js").then(() => {
             frm.gstr1 = new GSTR1(frm);
             frm.trigger("company");
@@ -186,7 +188,7 @@ frappe.ui.form.on(DOCTYPE, {
             }
 
             if (frm.doc.filing_preference != filters.filing_preference) {
-                frm.set_value("filing_preference", filters.filing_preference);
+                // frm.set_value("filing_preference", filters.filing_preference);
             }
 
             frm.taxpayer_api_call("generate_gstr1", { only_books_data }).then(r => {

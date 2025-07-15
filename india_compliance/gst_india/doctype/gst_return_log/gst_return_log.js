@@ -43,25 +43,12 @@ frappe.ui.form.on("GST Return Log", {
         if (frm.doc.return_type !== "GSTR1") return;
 
         frm.add_custom_button(__("View GSTR-1"), () => {
-            frappe.set_route("Form", "GSTR-1");
-
-            // after form loads
-            new Promise(resolve => {
-                const interval = setInterval(() => {
-                    if (cur_frm.doctype === "GSTR-1" && cur_frm.__setup_complete) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 200);
-            }).then(async () => {
-                await cur_frm.set_value({
-                    company: frm.doc.company,
-                    company_gstin: frm.doc.gstin,
-                    year: year,
-                    month_or_quarter: month_or_quarter,
-                    filing_preference: frm.doc.filing_preference,
-                });
-                cur_frm.save();
+            frappe.set_route("Form", "GSTR-1", {
+                company: frm.doc.company,
+                company_gstin: frm.doc.gstin,
+                year: year,
+                month_or_quarter: month_or_quarter,
+                filing_preference: frm.doc.filing_preference,
             });
         });
     },
