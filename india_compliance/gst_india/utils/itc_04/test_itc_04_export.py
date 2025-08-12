@@ -104,7 +104,7 @@ class TestITC04Export(IntegrationTestCase):
         cls.se.submit()
 
         cls.scr = make_subcontracting_receipt(sco.name)
-        cls.scr.update({"posting_date": "2025-01-10", "set_posting_time": 1})
+        cls.scr.update({"posting_date": "2025-01-10", "posting_time": "00:00:00"})
         cls.scr.save()
 
         cls.scr.append(
