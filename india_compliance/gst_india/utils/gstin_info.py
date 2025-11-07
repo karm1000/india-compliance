@@ -6,7 +6,7 @@ from pypika import Order
 
 import frappe
 from frappe import _, request_cache
-from frappe.query_builder.functions import Concat, Substring
+from frappe.query_builder.functions import Concat, Count, IfNull, Substring
 from frappe.utils import add_to_date, cint
 
 from india_compliance.exceptions import GSPServerError
@@ -96,7 +96,34 @@ def _get_gstin_info(gstin, *, doc=None, throw_error=True):
         gstin_info.all_addresses = list(map(_get_address, all_addresses))
         gstin_info.permanent_address = gstin_info.all_addresses[0]
 
+    gstin_info.gstin_exists = gstin_exists_for_party(gstin, doc.get("doctype"))
+
     return gstin_info
+
+
+def gstin_exists_for_party(gstin, party_type):
+    if not gstin:
+        return True
+
+    gstin_count = frappe.db.count(party_type, filters={"gstin": gstin})
+
+    if gstin_count:
+        return True
+
+    ADDRESS = frappe.qb.DocType("Address")
+    DN = frappe.qb.DocType("Dynamic Link")
+
+    linked_parties = (
+        frappe.qb.from_(ADDRESS)
+        .join(DN)
+        .on(ADDRESS.name == DN.parent)
+        .where(DN.link_doctype == party_type)
+        .where(IfNull(DN.link_name, "") != "")
+        .where(ADDRESS.gstin == gstin)
+        .select(Count("*"))
+    ).run(pluck=True)
+
+    return bool(linked_parties[0])
 
 
 def get_archived_gstin_info(gstin):

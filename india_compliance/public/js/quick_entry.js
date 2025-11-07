@@ -28,11 +28,11 @@ class GSTQuickEntryForm extends frappe.ui.form.QuickEntryForm {
                 fieldtype: "Section Break",
                 description: this.api_enabled
                     ? __(
-                        `When you enter a GSTIN, the permanent address linked to it is
+                          `When you enter a GSTIN, the permanent address linked to it is
                         autofilled.<br>
                         Change the {0} to autofill other addresses.`,
-                        [frappe.meta.get_label("Address", "pincode")]
-                    )
+                          [frappe.meta.get_label("Address", "pincode")]
+                      )
                     : "",
                 collapsible: 0,
             },
@@ -100,7 +100,8 @@ class GSTQuickEntryForm extends frappe.ui.form.QuickEntryForm {
                     if (["Customer", "Supplier"].includes(this.doctype)) {
                         d.set_value(
                             `${this.doctype.toLowerCase()}_type`,
-                            this.gstin_to_party_type_map[d.doc._gstin[5]] || "Individual"
+                            this.gstin_to_party_type_map[d.doc._gstin[5]] ||
+                                "Individual"
                         );
                     }
 
@@ -320,7 +321,7 @@ class AddressQuickEntryForm extends GSTQuickEntryForm {
                 "Customer",
                 "Supplier",
                 "Company",
-                "Lead"
+                "Lead",
             ].includes(doc.doctype)
         )
             return;
@@ -378,10 +379,17 @@ async function autofill_fields(dialog) {
         gstin_field.set_description(get_gstin_description());
         return;
     }
-
-    const gstin_info = await get_gstin_info(gstin, dialog.doc.doctype);
+    const doctype = dialog.doc.doctype;
+    const gstin_info = await get_gstin_info(gstin, doctype);
     set_gstin_description(gstin_field, gstin_info.status);
     map_gstin_info(dialog.doc, gstin_info);
+    if (gstin_info.gstin_exists) {
+        dialog.show_message(
+            __("The GSTIN entered is already linked to another {0}", [
+                doctype.toLowerCase(),
+            ])
+        );
+    }
     dialog.refresh();
 
     setup_pincode_field(dialog, gstin_info);
