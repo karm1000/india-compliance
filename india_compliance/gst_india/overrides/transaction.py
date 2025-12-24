@@ -725,6 +725,12 @@ def get_source_state_code(doc):
         return (doc.bill_from_gstin or doc.bill_to_gstin)[:2]
 
     if doc.gst_category == "Overseas":
+        # As per Section 10(1)(a) IGST Act, place of supply is where movement terminates
+        # If place_of_supply is set to an Indian state (shipping address in India),
+        # treat it as domestic supply from that state, not overseas
+        if doc.place_of_supply and doc.place_of_supply[:2] != "96":
+            return doc.place_of_supply[:2]
+
         return "96"
 
     if doc.gst_category == "Unregistered" and doc.supplier_address:

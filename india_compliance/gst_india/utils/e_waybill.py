@@ -1627,6 +1627,13 @@ class EWaybillData(GSTTransactionData):
             transaction_type = 2
             self.ship_to = self.get_address_details(address.ship_to)
 
+        # IGST Section 10(1)(a): If bill_to is overseas and transport is within India
+        if (
+            self.doc.gst_category == "Overseas"
+            and not self.doc.place_of_supply.startswith("96")
+        ):
+            self.bill_to = self.ship_to.copy()
+
         self.transaction_details.transaction_type = transaction_type
 
         to_party = self.transaction_details.party_name
@@ -1647,6 +1654,28 @@ class EWaybillData(GSTTransactionData):
 
         if self.doc.gst_category == "SEZ":
             self.bill_to.state_number = 96
+
+    def is_bill_to_overseas_and_transport_in_india(self):
+        """
+        Returns True if bill_to is overseas (outside India) and both ship_from and ship_to are in India.
+        """
+        # You may need to adjust the logic for your address object structure
+        overseas_country_codes = {"IN", "IND", "INDIA"}
+        # bill_to is overseas if country is not India
+        bill_to_country = getattr(self.bill_to, "country", None)
+        ship_from_country = getattr(self.ship_from, "country", "IN")
+        ship_to_country = getattr(self.ship_to, "country", "IN")
+        # If country is not set, assume India
+        is_bill_to_overseas = (
+            bill_to_country and bill_to_country.upper() not in overseas_country_codes
+        )
+        is_ship_from_india = (
+            not ship_from_country or ship_from_country.upper() in overseas_country_codes
+        )
+        is_ship_to_india = (
+            not ship_to_country or ship_to_country.upper() in overseas_country_codes
+        )
+        return is_bill_to_overseas and is_ship_from_india and is_ship_to_india
 
     def get_address_details(self, *args, **kwargs):
         address_details = super().get_address_details(*args, **kwargs)
@@ -1729,6 +1758,7 @@ class EWaybillData(GSTTransactionData):
 
             self.bill_from.gstin = _get_sandbox_gstin(self.bill_from, 0)
             self.bill_to.gstin = _get_sandbox_gstin(self.bill_to, 1)
+
         data = {
             "userGstin": self.transaction_details.company_gstin,
             "supplyType": self.transaction_details.supply_type,
