@@ -11,6 +11,8 @@ fi
 
 cd ~ || exit
 
+export BENCH_DISABLE_UV=1
+
 echo "Setting Up System Dependencies..."
 
 sudo apt update
