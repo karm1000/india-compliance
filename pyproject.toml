@@ -13,6 +13,9 @@ dependencies = [
 
     # Not used directly - required by PyQRCode for PNG generation
     "pypng~=0.20220715.0",
+
+    # Pin for compatibility, v2 has breaking changes
+    "urllib3>=1.26.4,<2",
 ]
 
 [build-system]
